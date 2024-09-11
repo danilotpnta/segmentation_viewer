@@ -127,8 +127,10 @@ def display(background_names: list[str], segmentation_names: list[list[str]],
                 fig = plt.figure()
         grid = gridspec.GridSpec(len(indexes) + args.legend, len(segmentation_names),
                                  height_ratios=[((0.9 + 0.1 * ~args.legend) / len(indexes))
-                                                for _ in range(len(indexes))] + ([0.1] if args.legend else []))
-        grid.update(wspace=0.025, hspace=0.05)
+                                                for _ in range(len(indexes))] + ([0.1] if args.legend else []),
+                                                figure=fig)
+        grid.update(wspace=0.025, hspace=0.025)
+        
 
         names: list[str]
         if args.cmap == 'cityscape':
@@ -138,7 +140,8 @@ def display(background_names: list[str], segmentation_names: list[list[str]],
                 cmap = ListedColormap(colors, 'cityscape')
         else:
                 # cmap = args.cmap
-                cmap = matplotlib.cm.get_cmap(args.cmap)
+                # cmap = matplotlib.cm.get_cmap(args.cmap) # depricated in 3.7
+                cmap = matplotlib.colormaps[args.cmap]
                 names = list(map(str, range(args.C))) if not args.class_names else args.class_names
                 assert len(names) == args.C
 
@@ -181,13 +184,14 @@ def display(background_names: list[str], segmentation_names: list[list[str]],
                         display_item(axe, img, seg, contour, cmap, args)
 
                         if j == 0:
-                                print(row_title[idx])
+                                # print(row_title[idx])
                                 axe.text(-30, img.shape[1] // 2, row_title[idx], rotation=90,
                                          verticalalignment='center', fontsize=14)
                         if i == 0:
                                 axe.set_title(column_title[j])
 
-                fig.tight_layout()
+        fig.set_constrained_layout(True)
+
 
 
 def get_image_lists(img_source: str, folders: list[str], id_regex: str,
@@ -358,12 +362,15 @@ def main() -> None:
                                 remap=eval(args.remap),
                                 args=args)
 
-        fig = plt.figure()
+        fig = plt.figure(figsize=(14, 8))
         event_handler = EventHandler(order, args.n, draw_function, fig)
         fig.canvas.mpl_connect('button_press_event', event_handler)
 
         draw_function(order[:args.n], fig=fig)
-        plt.show()
+        dataset_name = args.img_source.split('/')[1]
+        fig.savefig(f"{dataset_name}.png")
+        print(f"Figure saved! '{dataset_name}.png'")
+
 
 
 if __name__ == "__main__":
